@@ -1,0 +1,21 @@
+page {
+  background-color: #F7F8FA;
+  color: #1F2329;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica,
+    Segoe UI, Arial, Roboto, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft Yahei', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+view, text, scroll-view {
+  box-sizing: border-box;
+}
+
+@keyframes bp-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+button::after {
+  border: none;
+}

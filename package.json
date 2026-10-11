@@ -1,0 +1,35 @@
+{
+  "name": "boiling-point",
+  "version": "1.0.0",
+  "private": true,
+  "description": "沸点创意 Boiling Point — 抖音爆款内容每日拆解与趋势报告系统",
+  "workspaces": [
+    "packages/*",
+    "server",
+    "apps/web",
+    "apps/mobile",
+    "apps/desktop"
+  ],
+  "scripts": {
+    "core:fetch": "node packages/core/bin/boiling.js fetch",
+    "core:run": "node packages/core/bin/boiling.js run",
+    "core:report": "node packages/core/bin/boiling.js report",
+    "agent": "node packages/agent/bin/agent.js",
+    "agent:run": "node packages/agent/bin/agent.js run",
+    "agent:plan": "node packages/agent/bin/agent.js plan",
+    "agent:status": "node packages/agent/bin/agent.js status",
+    "agent:brief": "node packages/agent/bin/agent.js brief",
+    "agent:loop": "node packages/agent/bin/agent.js loop",
+    "datasource:check": "node packages/core/bin/datasource-check.js",
+    "test": "node --test packages/core/test/*.test.js packages/agent/test/*.test.js",
+    "server": "node server/src/index.js",
+    "web:dev": "npm --workspace apps/web run dev",
+    "web:build": "npm --workspace apps/web run build",
+    "mobile:dev": "npm --workspace apps/mobile run dev:h5",
+    "mobile:build": "npm --workspace apps/mobile run build:h5",
+    "desktop:dev": "npm --workspace apps/desktop run start"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}
