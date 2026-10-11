@@ -8,7 +8,9 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { getDb, getReport, getLatestDateKey, listReports, getDayVideos, getDayTags, getTagTrend, getStats, listRuns } from '../../packages/core/src/store/db.js';
+import { getDb, getReport, getLatestDateKey, listReports, getDayVideos, getDayTags, getTagTrend, getStats, listRuns, saveSubscriber, listSubscribers, countSubscribers } from '../../packages/core/src/store/db.js';
+import { fetchTopVideos } from '../../packages/core/src/providers/composite.js';
+import { buildBaseline, scoreTitle, similarTitles } from '../../packages/core/src/scorer/title.js';
 import { exportTaxonomy } from '../../packages/core/src/taxonomy/taxonomy.js';
 import { runDaily } from '../../packages/core/src/pipeline.js';
 import { fetchHotWords } from '../../packages/core/src/providers/douyin.js';
@@ -77,6 +79,57 @@ async function ensureDate(dateKey, { force = false } = {}) {
 /* ---------------- routes ---------------- */
 
 let lastRunAt = null;
+
+/* ---------------- 标题打分器的基准库 ---------------- */
+
+let baselineCache = { at: 0, data: null };
+const BASELINE_TTL_MS = 60 * 60 * 1000; // 热门写法一天内不会突变，缓存 1 小时
+
+/**
+ * 构建「当下热门标题」基准：优先用库里近 7 天的真实标题，不足 30 条时实时抓当前热门补齐。
+ * 打分器的一切结论都来自这里——所以它必须是真实数据，不能用仿真。
+ */
+async function getTitleBaseline() {
+  if (baselineCache.data && Date.now() - baselineCache.at < BASELINE_TTL_MS) return baselineCache.data;
+
+  const since = shiftDateKey(toDateKey(), -7);
+  let pool = [];
+  try {
+    pool = db
+      .prepare('SELECT title, play, author FROM videos WHERE date_key >= ? ORDER BY play DESC LIMIT 200')
+      .all(since)
+      .map((r) => ({ title: r.title, play: r.play, author: r.author }))
+      .filter((x) => x.title);
+  } catch {
+    pool = [];
+  }
+
+  let source = 'history';
+  if (pool.length < 30) {
+    try {
+      const res = await fetchTopVideos({ limit: 50 });
+      const seen = new Set(pool.map((p) => p.title));
+      const live = (res.videos || [])
+        .map((v) => ({ title: v.title, play: v.play, author: v.author }))
+        .filter((v) => v.title && !seen.has(v.title));
+      pool = pool.concat(live);
+      source = pool.length > seen.size ? 'history+live' : 'live';
+    } catch (e) {
+      console.warn('[baseline] 实时热门抓取失败，只用历史样本：', e.message);
+    }
+  }
+
+  baselineCache = {
+    at: Date.now(),
+    data: {
+      baseline: buildBaseline(pool.map((p) => p.title)),
+      pool,
+      fetchedAt: new Date().toISOString(),
+      source,
+    },
+  };
+  return baselineCache.data;
+}
 
 const routes = {
   'GET /api/health': async () => ({
@@ -163,6 +216,38 @@ const routes = {
     };
   },
 
+  /* ---------------- 免费工具：标题打分器（获客入口） ---------------- */
+
+  'GET /api/score-title': async (u) => {
+    const title = String(u.searchParams.get('title') || '').slice(0, 200);
+    const bl = await getTitleBaseline();
+    const r = scoreTitle(title, bl.baseline);
+    return {
+      ...r,
+      similar: title ? similarTitles(title, bl.pool, 3) : [],
+      baseline: { ...(r.baseline || {}), fetchedAt: bl.fetchedAt, source: bl.source },
+    };
+  },
+
+  'GET /api/score-title/baseline': async () => {
+    const bl = await getTitleBaseline();
+    return {
+      size: bl.baseline.size,
+      rate: bl.baseline.rate,
+      length: bl.baseline.length,
+      fetchedAt: bl.fetchedAt,
+      source: bl.source,
+    };
+  },
+
+  /** 留资：免费工具换邮箱。验证期不发确认邮件、不做密码 */
+  'POST /api/subscribe': async (u, body) => {
+    const r = saveSubscriber(db, { email: body.email, source: body.source || 'title-tool', note: body.note || '' });
+    return { ...r, total: countSubscribers(db) };
+  },
+
+  'GET /api/subscribers': async () => ({ total: countSubscribers(db), items: listSubscribers(db, 50) }),
+
   /* ---------------- 内容情报 Agent ---------------- */
 
   /** Agent 状态快照：今日值守记录 + KPI + 记忆 + 问题 */
@@ -245,6 +330,7 @@ const STATIC_MAP = [
   { prefix: '/agent', dirs: [join(ROOT, 'agent-console')], spa: false },
   { prefix: '/app', dirs: [join(ROOT, 'apps/mobile/dist'), join(ROOT, 'apps/mobile/dist/build/h5')], spa: true },
   { prefix: '/web', dirs: [join(ROOT, 'apps/web/dist')], spa: true },
+  { prefix: '/tool', dirs: [join(ROOT, 'tools/title-score')], spa: false },
 ];
 for (const m of STATIC_MAP) m.dir = m.dirs.find((d) => existsSync(d)) || null;
 
@@ -295,7 +381,7 @@ const server = createServer(async (req, res) => {
     if (data === null || data === undefined) return fail(res, '暂无数据', 404);
     return ok(res, data);
   } catch (e) {
-    return fail(res, e.message, 500);
+    return fail(res, e.message, e.status || 500);
   }
 });
 

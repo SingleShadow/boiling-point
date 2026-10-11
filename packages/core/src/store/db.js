@@ -64,6 +64,14 @@ CREATE TABLE IF NOT EXISTS tag_daily (
   PRIMARY KEY (date_key, tag_id)
 );
 CREATE INDEX IF NOT EXISTS idx_tag_daily_tag ON tag_daily(tag_id);
+
+-- 留资：免费工具（标题打分器）带来的邮箱，验证期不做密码与邮件发送
+CREATE TABLE IF NOT EXISTS subscribers (
+  email TEXT PRIMARY KEY,
+  source TEXT,
+  note TEXT,
+  created_at TEXT
+);
 `;
 
 let _db = null;
@@ -188,6 +196,28 @@ export function getStats(db) {
   const runs = db.prepare('SELECT COUNT(*) AS c FROM runs').get()?.c || 0;
   const last = db.prepare('SELECT * FROM runs ORDER BY id DESC LIMIT 1').get() || null;
   return { days, videos, reports, runs, lastRun: last };
+}
+
+/** 保存留资邮箱（免费工具带来的线索）。邮箱格式不合法时抛出，由调用方转成 400 */
+export function saveSubscriber(db, { email, source = 'unknown', note = '' }) {
+  const e = String(email || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) {
+    const err = new Error('邮箱格式不正确');
+    err.status = 400; // 是客户端输入问题，不该报 500
+    throw err;
+  }
+  const now = new Date().toISOString();
+  const r = db.prepare('INSERT OR IGNORE INTO subscribers (email, source, note, created_at) VALUES (?,?,?,?)')
+    .run(e, String(source).slice(0, 40), String(note).slice(0, 200), now);
+  return { email: e, created: r.changes > 0, createdAt: now };
+}
+
+export function listSubscribers(db, limit = 200) {
+  return db.prepare('SELECT * FROM subscribers ORDER BY created_at DESC LIMIT ?').all(Number(limit) || 200);
+}
+
+export function countSubscribers(db) {
+  return db.prepare('SELECT COUNT(*) AS c FROM subscribers').get()?.c || 0;
 }
 
 function safeJson(s) {

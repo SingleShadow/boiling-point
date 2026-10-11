@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>标题体检 · 沸点创意</title>
+<style>
+:root{
+  --orange:#FF5A1F; --red:#E8362B; --graphite:#16181D; --blue:#2F6BFF; --amber:#FFB020;
+  --line:#E6E8EC; --muted:#6B7280; --bg:#FFFFFF; --soft:#F7F8FA;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--soft);color:var(--graphite);
+  font:14px/1.7 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:680px;margin:0 auto;padding:28px 18px 60px}
+.brand{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--orange)}
+h1{font-size:19px;font-weight:600;margin:0}
+.sub{color:var(--muted);font-size:13px;margin:0 0 20px}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:14px}
+textarea{width:100%;min-height:76px;resize:vertical;border:1px solid var(--line);border-radius:10px;
+  padding:12px;font-size:15px;line-height:1.6;font-family:inherit;outline:none}
+textarea:focus{border-color:var(--orange)}
+.row{display:flex;gap:10px;align-items:center;margin-top:12px}
+button{flex:0 0 auto;background:var(--orange);color:#fff;border:0;border-radius:10px;
+  padding:11px 22px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit}
+button:disabled{background:#C9CCD2;cursor:default}
+.hint{color:var(--muted);font-size:12px}
+.err{color:var(--red);font-size:13px;margin-top:10px;display:none}
+
+.score{display:flex;align-items:baseline;gap:14px;margin-bottom:4px}
+.num{font-size:52px;font-weight:600;line-height:1;letter-spacing:-1px}
+.badge{padding:3px 10px;border-radius:6px;font-size:13px;font-weight:500;color:#fff;background:var(--muted)}
+.verdict{color:var(--muted);font-size:13px;margin-bottom:14px}
+.meter{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin:6px 0 16px}
+.meter i{display:block;height:100%;background:var(--orange)}
+
+h3{font-size:14px;font-weight:600;margin:18px 0 10px}
+.feat{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line)}
+.feat:first-of-type{border-top:0}
+.mark{flex:0 0 18px;height:18px;border-radius:50%;font-size:11px;color:#fff;text-align:center;line-height:18px;margin-top:2px}
+.yes{background:var(--blue)} .no{background:#C9CCD2}
+.fname{flex:0 0 92px;font-weight:500}
+.frate{flex:0 0 74px;color:var(--muted);font-size:12px;text-align:right}
+.ftip{flex:1;color:var(--muted);font-size:12.5px}
+.sug{background:var(--soft);border-left:3px solid var(--orange);border-radius:0 8px 8px 0;
+  padding:10px 12px;margin-bottom:8px;font-size:13px}
+.sim{padding:8px 0;border-top:1px solid var(--line);font-size:13px}
+.sim:first-of-type{border-top:0}
+.simtitle{display:block;margin-bottom:2px}
+.simmeta{color:var(--muted);font-size:12px}
+
+.lead{margin-top:20px}
+.leadrow{display:flex;gap:10px;margin-top:10px}
+input[type=email]{flex:1;border:1px solid var(--line);border-radius:10px;padding:10px 12px;
+  font-size:14px;font-family:inherit;outline:none}
+input[type=email]:focus{border-color:var(--orange)}
+.ok{color:var(--blue);font-size:13px;margin-top:10px;display:none}
+footer{color:var(--muted);font-size:12px;text-align:center;margin-top:26px;line-height:1.9}
+footer a{color:var(--blue);text-decoration:none}
+@media(max-width:520px){
+  .fname{flex:0 0 76px}.frate{display:none}
+  .num{font-size:44px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand"><span class="dot"></span><h1>标题体检</h1></div>
+  <p class="sub">用当下真实热门的 <b id="bsize">—</b> 条标题做基准，看你的标题差在哪。每条建议都带占比数据。</p>
+
+  <div class="card">
+    <textarea id="t" placeholder="粘贴你要发的视频标题，例如：我花了 30 天做这件事，结局谁也没想到"></textarea>
+    <div class="row">
+      <button id="go">打分</button>
+      <span class="hint">Ctrl + Enter 快速打分</span>
+    </div>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div id="out" style="display:none">
+    <div class="card">
+      <div class="score"><span class="num" id="num">0</span><span class="badge" id="badge">—</span></div>
+      <div class="verdict" id="verdict"></div>
+      <div class="meter"><i id="bar" style="width:0%"></i></div>
+      <div class="hint" id="lenline"></div>
+      <div class="hint" id="covline"></div>
+
+      <h3>写法对照</h3>
+      <div id="feats"></div>
+
+      <h3>最值得改的三处</h3>
+      <div id="sugs"></div>
+
+      <div id="simwrap" style="display:none">
+        <h3>跟你最接近的真实热门标题</h3>
+        <div id="sims"></div>
+      </div>
+    </div>
+
+    <div class="card lead">
+      <b>想知道明天热门会怎么变？</b>
+      <div class="hint">留下邮箱，每天收到一份当日爆款拆解（题材 / 文案 / 节奏 / 表现手法）。不收费，随时可退。</div>
+      <div class="leadrow">
+        <input type="email" id="email" placeholder="you@example.com">
+        <button id="sub">订阅</button>
+      </div>
+      <div class="ok" id="ok"></div>
+      <div class="err" id="suberr"></div>
+    </div>
+  </div>
+
+  <footer>
+    基准来源：B站公开接口实时热门（真实数据，非构造值）· 每日更新<br>
+    <a href="/web/">沸点创意官网</a> · <a href="/agent/">值守控制台</a>
+  </footer>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fmt = (n) => (Number(n) || 0).toLocaleString('zh-CN');
+const COLOR = { A: '#1D9E75', B: '#2F6BFF', C: '#FFB020', D: '#E8362B' };
+let last = null;
+
+async function loadBaseline() {
+  try {
+    const r = await fetch('/api/score-title/baseline').then((x) => x.json());
+    if (r.ok && r.data) $('bsize').textContent = r.data.size || 0;
+  } catch {}
+}
+
+async function score() {
+  const title = $('t').value.trim();
+  if (!title) { $('err').style.display = 'block'; $('err').textContent = '先写一个标题'; return; }
+  $('err').style.display = 'none';
+  $('go').disabled = true;
+  $('go').textContent = '打分中';
+  try {
+    const r = await fetch('/api/score-title?title=' + encodeURIComponent(title)).then((x) => x.json());
+    if (!r.ok) throw new Error(r.error?.message || '打分失败');
+    render(r.data);
+  } catch (e) {
+    $('err').style.display = 'block';
+    $('err').textContent = e.message;
+  } finally {
+    $('go').disabled = false;
+    $('go').textContent = '打分';
+  }
+}
+
+function render(d) {
+  last = d;
+  const g = d.grade || '—';
+  $('num').textContent = d.score;
+  $('num').style.color = COLOR[g] || 'var(--graphite)';
+  $('badge').textContent = g + ' 级';
+  $('badge').style.background = COLOR[g] || 'var(--muted)';
+  $('verdict').textContent = d.verdict || '';
+  $('bar').style.width = d.score + '%';
+  $('bar').style.background = COLOR[g] || 'var(--orange)';
+
+  const L = d.length || {};
+  const [a, b] = L.ideal || [0, 0];
+  $('lenline').textContent = `你的标题 ${L.value} 字 · 热门主流区间 ${a}–${b} 字`
+    + (L.verdict === 'short' ? '（偏短）' : L.verdict === 'long' ? '（偏长）' : '（正好）');
+  $('covline').textContent = `覆盖了热门写法的 ${Math.round((d.coverage || 0) * 100)}% · 基准样本 ${d.baseline?.size || 0} 条`;
+
+  $('feats').innerHTML = (d.features || []).map((f) => {
+    const rate = f.rate === null || f.rate === undefined ? '' : (f.hot ? '热门 ' + Math.round(f.rate * 100) + '%' : '仅 ' + Math.round(f.rate * 100) + '%');
+    return `<div class="feat">
+      <span class="mark ${f.hit ? 'yes' : 'no'}">${f.hit ? '有' : '无'}</span>
+      <span class="fname">${esc(f.name)}</span>
+      <span class="frate">${rate}</span>
+      <span class="ftip">${esc(f.tip || f.why || '')}</span>
+    </div>`;
+  }).join('');
+
+  $('sugs').innerHTML = (d.suggestions || []).map((s) => `<div class="sug">${esc(s)}</div>`).join('');
+
+  const sims = d.similar || [];
+  $('simwrap').style.display = sims.length ? 'block' : 'none';
+  $('sims').innerHTML = sims.map((s) => `<div class="sim">
+    <span class="simtitle">${esc(s.title)}</span>
+    <span class="simmeta">${fmt(s.play)} 播放${s.author ? ' · ' + esc(s.author) : ''}</span>
+  </div>`).join('');
+
+  $('out').style.display = 'block';
+  $('out').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function subscribe() {
+  const email = $('email').value.trim();
+  if (!email) return;
+  $('sub').disabled = true;
+  try {
+    const r = await fetch('/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, source: 'title-tool', note: last ? `标题体检 ${last.score} 分` : '' }),
+    }).then((x) => x.json());
+    if (!r.ok) throw new Error(r.error?.message || '提交失败');
+    $('suberr').style.display = 'none';
+    $('ok').style.display = 'block';
+    $('ok').textContent = r.data.created
+      ? '已记下，明天的拆解会发到 ' + email
+      : '这个邮箱已经订阅过了';
+    $('email').value = '';
+  } catch (e) {
+    $('suberr').style.display = 'block';
+    $('suberr').textContent = e.message;
+  } finally {
+    $('sub').disabled = false;
+  }
+}
+
+$('go').onclick = score;
+$('sub').onclick = subscribe;
+$('t').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) score(); });
+$('email').addEventListener('keydown', (e) => { if (e.key === 'Enter') subscribe(); });
+loadBaseline();
+</script>
+</body>
+</html>
