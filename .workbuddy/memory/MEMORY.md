@@ -31,6 +31,9 @@
 - 热搜**双通道**：主 `iesdouyin` + 备 `60s.viki.moe/v2/douyin`，主挂自动降级并在 `warnings` 标注（已实测降级成功）。
 - 各类"免费抖音 API"聚合站（vvhan/alapi/天聚数行等）实测**返回的都是热搜词，没有播放量**，别再试。
 - 真实源判定：`LIVE_SOURCES = {douyin, custom}`，仅 `simulated` 算非真实。
+- **B站热门榜只出头部，不是客户池**：抽 15 个上榜 UP 主，百万粉以上 10/15。`popular` 是"全站综合热门"，用来捞「中腰部 1-10 万粉」客户是错的。分区榜 `ranking/v2?rid=X` 实测 **-352 风控**；粉丝数只能靠 `x/relation/stat?vmid=` 逐个补（公开但有频限）。
+- **UP 主公开联系方式几乎拿不到**：50 条热门视频简介中微信/QQ/商务合作迹象 **0/50**。
+- **获客路径已改为「拉」不是「推」**：每日拆解内容发 B站动态/小红书/知乎为主（产品产出物=获客素材，边际成本近零），精准私信每天 ≤5 个为辅。原「私信 50/150 人」方案已作废，见 `VALIDATION_PLAN.md`。
 - **数据源自检：`npm run datasource:check`**（`packages/core/bin/datasource-check.js`）——打印当前配置/热搜通道/视频榜三通道实测/下一步建议。改数据源相关代码后先跑它。
 - `packages/core/test/custom.test.js` 用**本地 mock HTTP 服务**端到端验证适配器（10 用例）。接数据商不通时，问题只在 URL/Key/映射三处。
 
