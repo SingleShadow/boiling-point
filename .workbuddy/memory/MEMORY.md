@@ -34,6 +34,14 @@
 - **数据源自检：`npm run datasource:check`**（`packages/core/bin/datasource-check.js`）——打印当前配置/热搜通道/视频榜三通道实测/下一步建议。改数据源相关代码后先跑它。
 - `packages/core/test/custom.test.js` 用**本地 mock HTTP 服务**端到端验证适配器（10 用例）。接数据商不通时，问题只在 URL/Key/映射三处。
 
+## 平台适配（2026-10-12 起，B站为主平台）
+- **`packages/core/src/platform.js`** 是平台差异的唯一去处：时长分档、哪些节奏指标成立、能否回溯历史、B站分区→题材/形式映射。分析器只消费参数，不写死阈值。
+- 关键口径：**B站不输出语速与信息密度**（接口无字幕，标题字数÷时长≈0.1，套抖音阈值会全判「慢+低密度」），改在 `rhythm.metrics.unavailable` 声明。
+- **B站 `supportsHistory=false`**：接口只返回「此刻热门」，Agent **跳过 backfill**。强行补录 = 把同一批数据复制成多天假历史。真趋势只能靠每天真跑累积（2-4 周）。
+- `topic.js`/`craft.js` 通过 `video.raw.topicHint`/`raw.craftHint` 吃数据源标注；**标注优先于关键词猜测**（顺序反了会误判）。
+- 无形式信号时输出 `form_unknown`，**不默认判口播**（默认口播曾让 B站 9/10 变口播）。维度不能为空，否则质检判"维度缺失"。
+- 标签体系 **79 → 86**：新增题材 音乐/动画影视、4 个 B站时长档、form_unknown。**改 taxonomy 必须同步阿燃 `PLAYBOOK.md` 的标签翻译表**（铁律）。
+
 ## 环境铁律（本机）
 - Bash 工具必须先 `export PATH="/usr/bin:/bin:/usr/local/bin:$PATH"`，否则 ls/grep/tail 不可用。
 - PowerShell 工具输出捕获不到，只用来执行（如按端口杀进程），不要用来读取结果。
