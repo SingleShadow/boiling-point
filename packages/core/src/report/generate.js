@@ -124,6 +124,8 @@ export function generateReport({ dateKey, entries, prevTags = [], hotWords = nul
   const challengeCount = new Map();
   for (const e of entries) {
     for (const c of e.video.challenges || []) challengeCount.set(c, (challengeCount.get(c) || 0) + 1);
+    // B站等平台没有 challenges 字段，话题写在简介里（#话题# 或 【xx】），这里补抽一遍
+    for (const t of extractHashTopics(e.video.desc)) challengeCount.set(t, (challengeCount.get(t) || 0) + 1);
   }
   const hotTopics = [...challengeCount.entries()]
     .map(([name, count]) => ({ name, count }))
@@ -150,7 +152,14 @@ export function generateReport({ dateKey, entries, prevTags = [], hotWords = nul
     hotWordsSource: hotWords ? hotWords.source : 'none',
     hotWordsFetchedAt: hotWords ? hotWords.fetchedAt : null,
     summaryText:
-      `今日 ${entries.length} 条上榜内容中，「${topTopics[0]?.name || '—'}」以 ${topTopics[0]?.count || 0} 条占据主导（占比 ${Math.round((topTopics[0]?.share || 0) * 100)}%）；` +
+      // 样本只有 10 条时，2 条（20%）谈不上「占据主导」，别把话说满
+      (() => {
+        const t = topTopics[0];
+        if (!t) return '今日上榜内容题材分散，没有明显主导类型；';
+        const pct = Math.round((t.share || 0) * 100);
+        const verb = pct >= 30 ? '占据主导' : '占比最高';
+        return `今日 ${entries.length} 条上榜内容中，「${t.name}」以 ${t.count} 条${verb}（占比 ${pct}%）；`;
+      })() +
       `时长偏好集中在 ${preferredDuration}，主流形式为「${preferredForm}」；` +
       `开头偏好 ${preferredHooks.join(' / ')}，整体情绪倾向${emotionBias}；` +
       `平均爆款指数 ${avgScore}。`,
@@ -163,6 +172,8 @@ export function generateReport({ dateKey, entries, prevTags = [], hotWords = nul
     date: dateKey,
     generatedAt: new Date().toISOString(),
     source: entries[0]?.video?.source || 'unknown',
+    /** 平台决定报告标题与数据源文案，不能写死"抖音" */
+    platform: entries[0]?.video?.platform || 'douyin',
     top10,
     distribution,
     tagFrequencies,
@@ -228,15 +239,33 @@ function findTopicTagIdByName(name) {
 }
 
 import { TOPIC_TAGS } from '../taxonomy/taxonomy.js';
+import { getPlatform } from '../platform.js';
 const TAGS_BY_NAME = new Map(TOPIC_TAGS.map((t) => [t.id, t]));
 
 /* ---------------- Markdown ---------------- */
 
+/** 从简介里抽话题：#话题# 或 【话题】 */
+function extractHashTopics(text = '') {
+  const out = new Set();
+  for (const m of String(text).matchAll(/#([^#\s]{2,20})#/g)) out.add(m[1]);
+  for (const m of String(text).matchAll(/【([^【】]{2,20})】/g)) out.add(m[1]);
+  return [...out];
+}
+
+/** 数据源文案：写死"抖音"会出事故——真实来源可能是 B站 */
+function sourceLabel(r) {
+  const p = getPlatform(r.platform);
+  if (r.source === 'simulated') return `${p.name}仿真引擎（离线演示）`;
+  if (r.source === 'custom') return `${p.name}公开接口（真实数据）`;
+  return `${p.name}实时热榜`;
+}
+
 function renderMarkdown(r) {
   const L = [];
-  L.push(`# 沸点创意 · 抖音爆款趋势日报（${r.date}）`);
+  const p = getPlatform(r.platform);
+  L.push(`# 沸点创意 · ${p.name}爆款趋势日报（${r.date}）`);
   L.push('');
-  L.push(`> 数据源：${r.source === 'simulated' ? '仿真引擎（离线演示）' : '抖音实时热榜'} ｜ 样本 ${r.audienceInsight.sampleSize} 条 ｜ 生成时间 ${new Date(r.generatedAt).toLocaleString('zh-CN')}`);
+  L.push(`> 数据源：${sourceLabel(r)} ｜ 样本 ${r.audienceInsight.sampleSize} 条 ｜ 生成时间 ${new Date(r.generatedAt).toLocaleString('zh-CN')}`);
   L.push('');
   L.push('## 一、今日受众偏爱什么');
   L.push('');
@@ -252,9 +281,11 @@ function renderMarkdown(r) {
   L.push(`| 情绪倾向 | ${r.audienceInsight.emotionBias} |`);
   L.push('');
   if (r.audienceInsight.realHotWords?.length) {
-    L.push('### 抖音实时热搜榜（官方公开接口 · 真实数据）');
+    L.push('### 抖音实时热搜榜（话题层 · 官方公开接口 · 真实数据）');
     L.push('');
-    L.push(`> 抓取时间 ${new Date(r.audienceInsight.hotWordsFetchedAt).toLocaleString('zh-CN')}　这份数据来自抖音官方热搜榜，与上方视频榜的数据源相互独立`);
+    L.push(`> 抓取时间 ${new Date(r.audienceInsight.hotWordsFetchedAt).toLocaleString('zh-CN')}　`
+      + `这份热搜来自抖音官方接口，与上方${getPlatform(r.platform).name}视频榜相互独立：`
+      + `上方回答「什么内容爆了」，这里回答「大家在搜什么」`);
     L.push('');
     L.push('| # | 热搜词 | 热度值 | 标记 |');
     L.push('| --- | --- | --- | --- |');

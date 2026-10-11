@@ -7,6 +7,7 @@
 import * as douyin from '../../core/src/providers/douyin.js';
 import * as custom from '../../core/src/providers/custom.js';
 import { toDateKey, shiftDateKey } from '../../core/src/utils/date.js';
+import { detectPlatform } from '../../core/src/platform.js';
 import { recall } from './memory.js';
 
 function withTimeout(promise, ms, label) {
@@ -39,6 +40,8 @@ export async function probeLiveSource({ dateKey, limit = 10, metric = 'play', ti
       count,
       source: res.source || (useCustom ? 'custom' : 'douyin'),
       channel: useCustom ? 'custom' : 'douyin',
+      /** 平台决定能否回溯历史：B站只返回「此刻热门」，没有历史参数 */
+      platform: res.platform || (useCustom ? detectPlatform(process.env.CUSTOM_API_URL || '', process.env.CUSTOM_PLATFORM || '') : 'douyin'),
       warnings: res.warnings || [],
       detail: count > 0 ? `返回 ${count} 条` : '返回空榜单',
     };

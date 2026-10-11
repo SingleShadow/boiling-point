@@ -15,7 +15,10 @@
  *   CUSTOM_API_MAP        字段映射，JSON 字符串（见 DEFAULT_MAP）
  *   CUSTOM_DURATION_UNIT  时长单位 ms（默认）| s
  *   CUSTOM_API_TIMEOUT_MS 超时，默认 8000
+ *   CUSTOM_PLATFORM       平台标识 douyin（默认）| bilibili，决定时长分档与哪些节奏指标成立
  */
+
+import { detectPlatform, mapCategory } from '../platform.js';
 
 const DEFAULT_MAP = {
   id: 'aweme_id',
@@ -32,6 +35,10 @@ const DEFAULT_MAP = {
   music: 'music.title',
   challenges: 'text_extra[].cha_name',
   createTime: 'create_time',
+  /** 数据源自带的类目（B站分区 tname 等），是比标题猜词更可靠的题材信号 */
+  category: 'tname',
+  /** 简介/描述，用于提取话题与补充文案信号 */
+  desc: 'desc',
 };
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
@@ -99,8 +106,12 @@ function safeJson(s, fallback) {
   }
 }
 
-function normalize(raw, index, dateKey, map) {
+function normalize(raw, index, dateKey, map, platformId = 'douyin') {
   const challenges = getPath(raw, map.challenges) || [];
+  const category = String(getPath(raw, map.category) || '');
+  const desc = String(getPath(raw, map.desc) || '');
+  // 分区 → 内部标签提示。topic.js / craft.js 早已预留 raw.topicHint / raw.craftHint 接口，这里填上即可。
+  const hints = mapCategory(platformId, category);
   const durationRaw = num(getPath(raw, map.duration));
   const unit = (process.env.CUSTOM_DURATION_UNIT || 'ms').toLowerCase();
   const durationSec = unit === 's' ? durationRaw : Math.round(durationRaw / 1000);
@@ -127,8 +138,13 @@ function normalize(raw, index, dateKey, map) {
     url: String(getPath(raw, map.url) || ''),
     music: { title: String(getPath(raw, map.music) || ''), author: '' },
     challenges: Array.isArray(challenges) ? challenges.map(String) : [],
+    /** 数据源自带类目（B站分区），前端可直接展示真实分区 */
+    category,
+    desc,
+    /** 平台决定时长分档与哪些节奏指标成立 */
+    platform: platformId,
     source: 'custom',
-    raw: {},
+    raw: { category, topicHint: hints.topicHint, craftHint: hints.craftHint },
   };
 }
 
@@ -143,6 +159,7 @@ export async function fetchTopVideos(opts = {}) {
   const timeout = Number(process.env.CUSTOM_API_TIMEOUT_MS || 8000);
 
   const map = { ...DEFAULT_MAP, ...safeJson(process.env.CUSTOM_API_MAP, {}) };
+  const platformId = detectPlatform(process.env.CUSTOM_API_URL || '', process.env.CUSTOM_PLATFORM || '');
   const req = buildRequest(limit, dateKey);
 
   const ac = new AbortController();
@@ -165,7 +182,7 @@ export async function fetchTopVideos(opts = {}) {
   const list = getPath(json, listPath) ?? getPath(json, 'data') ?? json;
   if (!Array.isArray(list)) throw new Error(`列表路径 ${listPath} 未取到数组`);
 
-  let videos = list.map((r, i) => normalize(r, i, dateKey, map)).filter((v) => v.title);
+  let videos = list.map((r, i) => normalize(r, i, dateKey, map, platformId)).filter((v) => v.title);
   if (!videos.length) throw new Error('自定义数据源返回空榜单');
 
   const engage = (v) => v.stats.digg + v.stats.comment * 3 + v.stats.share * 4 + v.stats.collect * 2;
@@ -180,7 +197,8 @@ export async function fetchTopVideos(opts = {}) {
   if (videos.every((v) => v.duration === 0)) {
     warnings.push(`时长全为 0，请检查 duration 映射（当前取 "${map.duration}"）或设置 CUSTOM_DURATION_UNIT=s`);
   }
-  if (videos.every((v) => !v.challenges.length)) {
+  // B站等平台本来就没有 challenges 字段（话题在简介里用 #xx# 表示），此时不告警，避免误导排查方向
+  if (videos.every((v) => !v.challenges.length) && platformId !== 'bilibili') {
     warnings.push(`话题全为空，请检查 challenges 映射（当前取 "${map.challenges}"）`);
   }
 
@@ -188,6 +206,7 @@ export async function fetchTopVideos(opts = {}) {
     videos,
     source: 'custom',
     channel: 'custom',
+    platform: platformId,
     dateKey,
     metric: opts.metric || 'play',
     warnings,

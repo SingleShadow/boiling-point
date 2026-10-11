@@ -5,6 +5,8 @@
  * 计划是 Agent 的思考痕迹，会被完整记录并展示在控制台上。
  */
 
+import { getPlatform } from '../../core/src/platform.js';
+
 const SEV = { info: 'info', warn: 'warn', error: 'error', critical: 'critical' };
 
 /**
@@ -65,7 +67,21 @@ export function planActions(obs, opts = {}) {
   }
 
   /* --- 决策 3：历史缺口补齐（一次最多 3 天，避免长任务阻塞） --- */
-  if (obs.gaps.length) {
+  // 前提：数据源得支持按日期回溯。B站公开接口只返回「此刻热门」，
+  // 强行补录会把同一批数据复制成多天 —— 趋势曲线看着连续，其实是假的。
+  const platformId = obs.live?.platform || 'douyin';
+  const platform = getPlatform(platformId);
+  if (obs.gaps.length && platform.supportsHistory === false) {
+    rationale.push(`检测到历史缺口 ${obs.gaps.length} 天，但${platform.name}接口只返回实时榜单、不支持按日期回溯，本轮跳过补录`);
+    actions.push({
+      type: 'alert',
+      severity: SEV.info,
+      category: 'history',
+      title: `${platform.name}数据源无法回溯历史`,
+      detail: '该接口只返回「此刻热门」，补录出来的每一天都是同一批数据。趋势需从今日起每日真实累积，'
+        + '积累满 2 周后趋势与环比才具备参考性。当前缺口属正常现象，不是故障。',
+    });
+  } else if (obs.gaps.length) {
     const take = obs.gaps.slice(-3);
     rationale.push(`检测到历史缺口 ${obs.gaps.length} 天，本轮补齐最近 ${take.length} 天：${take.join('、')}`);
     for (const d of take) {

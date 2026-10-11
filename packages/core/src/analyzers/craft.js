@@ -44,15 +44,16 @@ export function analyze(video, ctx = {}) {
     tags.push({ id, name: meta.name, dimension: 'craft', confidence, matched, group: GROUP_OF(id) });
   };
 
-  // 1) 文案关键词命中
+  // 1) 数据源提示优先 —— 平台分区是官方标注，比从标题猜词可靠。
+  //    顺序很重要：add() 先到先得，若让关键词先占位，会出现「手机游戏」被判成「剧情表演」。
+  for (const id of video.raw?.craftHint || []) add(id, 0.9, ['数据源分区']);
+
+  // 2) 文案关键词命中
   for (const tag of CRAFT_TAGS) {
     if (!tag.keywords.length) continue;
     const r = scoreByKeywords(text, tag.keywords, tag.weight);
     if (r.confidence > 0) add(tag.id, Math.min(1, r.confidence), r.matched);
   }
-
-  // 2) 数据源提示（仿真池自带）
-  for (const id of video.raw?.craftHint || []) add(id, 0.9, ['数据源标注']);
 
   // 3) 题材先验
   const topicId = ctx.topic?.primary?.id;
@@ -60,10 +61,13 @@ export function analyze(video, ctx = {}) {
     if (!seen.has(id)) add(id, 0.55, [`${ctx.topic?.primary?.name || '题材'}常见形式`]);
   }
 
-  // 4) 客观信号
+  // 4) 客观信号（接在优先级最低处）
   if (video.music?.title) add('elem_bgm', 0.8, [video.music.title]);
   if (duration <= 20 && !tags.some((t) => t.id.startsWith('form_'))) add('form_beat', 0.5, ['短视频常见卡点']);
-  if (!tags.some((t) => t.id.startsWith('form_'))) add('form_talking', 0.4, ['默认推断']);
+  // 注意：原来这里有一条「没命中就默认口播」的兜底，导致 B站 9/10 条被判成口播。
+  // 没信号就该说没信号，不硬猜——形式未知比形式错误更可接受。
+  // 但仍要占一个「形式未判定」标签，否则整个 craft 维度为空会被质检判成「维度缺失」。
+  if (!tags.some((t) => t.id.startsWith('form_'))) add('form_unknown', 0.3, ['标题与分区均无形式线索']);
 
   const formTag = tags.find((t) => t.group === '形式');
   const techTags = tags.filter((t) => t.group === '技法');
@@ -72,11 +76,13 @@ export function analyze(video, ctx = {}) {
   return {
     tags: tags.sort((a, b) => b.confidence - a.confidence),
     metrics: {
-      form: formTag?.name || '未知',
+      form: formTag?.name || '形式未判定',
       techniques: techTags.map((t) => t.name),
       interactions: interactTags.map((t) => t.name),
     },
-    summary: `${formTag?.name || '未知形式'}为主${techTags.length ? `，运用${techTags.map((t) => t.name).join('、')}` : ''}${interactTags.length ? `，带${interactTags.map((t) => t.name).join('、')}` : ''}。`,
+    summary: formTag && formTag.id !== 'form_unknown'
+      ? `${formTag.name}为主${techTags.length ? `，运用${techTags.map((t) => t.name).join('、')}` : ''}${interactTags.length ? `，带${interactTags.map((t) => t.name).join('、')}` : ''}。`
+      : `形式未判定（元数据不足，需看画面才能确认）${techTags.length ? `，可见技法：${techTags.map((t) => t.name).join('、')}` : ''}。`,
   };
 }
 
