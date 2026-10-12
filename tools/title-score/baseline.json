@@ -1,0 +1,328 @@
+{
+  "generatedAt": "2026-10-12T02:07:26.296Z",
+  "source": "bilibili-popular",
+  "note": "真实 B站全站热门 Top50 快照，非构造值；静态托管下为固定快照，部署后可定时刷新",
+  "baseline": {
+    "size": 50,
+    "rate": {
+      "number": 0.1,
+      "suspense": 0.04,
+      "question": 0.26,
+      "contrast": 0.08,
+      "emotion": 0.2,
+      "bracket": 0.22,
+      "list": 0.06,
+      "firstperson": 0.08,
+      "command": 0
+    },
+    "length": {
+      "min": 2,
+      "max": 47,
+      "p25": 10,
+      "p50": 18,
+      "p75": 25
+    }
+  },
+  "pool": [
+    {
+      "title": "【邓肯】新发恐怖事件！女企业家被儿子雇人送入老年护理中心丨诡异的五亿高中生坠楼谜案！",
+      "play": 1473681,
+      "author": "勾手老大爷邓肯",
+      "url": "https://www.bilibili.com/video/BV1wAp76yEu1"
+    },
+    {
+      "title": "“上大学该谈个女朋友了”。我呀？我去谈恋爱啊？！那无敌了……",
+      "play": 2252065,
+      "author": "个大活人",
+      "url": "https://www.bilibili.com/video/BV1uvpg6zEdw"
+    },
+    {
+      "title": "逃离闪电侠黄金费德熊！你好邻居Mod",
+      "play": 767574,
+      "author": "鲤鱼Ace",
+      "url": "https://www.bilibili.com/video/BV1QmpE6aEA7"
+    },
+    {
+      "title": "【独家】牧神记 第104集 龙王有请",
+      "play": 2036190,
+      "author": "哔哩哔哩国创",
+      "url": "https://www.bilibili.com/video/BV1P2pY68EDr"
+    },
+    {
+      "title": "如何看待中国和巴西网友激情对线互开左籍？",
+      "play": 426880,
+      "author": "波士顿圆脸",
+      "url": "https://www.bilibili.com/video/BV1Uopn6PEcf"
+    },
+    {
+      "title": "倒查三年流水，顶级商K集体关门！商K经济终于崩盘了？",
+      "play": 1734900,
+      "author": "数据库kira",
+      "url": "https://www.bilibili.com/video/BV1Wqp46GEbP"
+    },
+    {
+      "title": "《生》生命是什么",
+      "play": 388590,
+      "author": "阿廖沙别害怕_",
+      "url": "https://www.bilibili.com/video/BV1zVpJ6yEi3"
+    },
+    {
+      "title": "新人第1次编曲耶",
+      "play": 463358,
+      "author": "软猫娘喵",
+      "url": "https://www.bilibili.com/video/BV1oQHR6rEBB"
+    },
+    {
+      "title": "12个脑洞大开的做饭方式！",
+      "play": 1701692,
+      "author": "胡仔一人食",
+      "url": "https://www.bilibili.com/video/BV1Jjpg6QEkh"
+    },
+    {
+      "title": "厨师长入行20多年开的第一家中餐馆，经营四年后决定搬迁！",
+      "play": 495938,
+      "author": "美食作家王刚R",
+      "url": "https://www.bilibili.com/video/BV1BjpJ6kEJR"
+    },
+    {
+      "title": "《谁家》一周年献礼",
+      "play": 327469,
+      "author": "嘞是唐孃孃",
+      "url": "https://www.bilibili.com/video/BV1H2p765E1b"
+    },
+    {
+      "title": "关羽全新双血条机制登场！",
+      "play": 2526864,
+      "author": "老月亮M",
+      "url": "https://www.bilibili.com/video/BV1nwp46TEt4"
+    },
+    {
+      "title": "【阿哈巨献】全城沦陷！四大虚狩都被邦布病毒感染！",
+      "play": 358056,
+      "author": "卷心的青菜",
+      "url": "https://www.bilibili.com/video/BV1u9pu6qE2d"
+    },
+    {
+      "title": "在 学 校 最 害 怕 的 声 音？",
+      "play": 799134,
+      "author": "进击的金厂长",
+      "url": "https://www.bilibili.com/video/BV1cjpv6fEgz"
+    },
+    {
+      "title": "慎点！可能是你见过最变态最猎奇尺度最大的游戏！！！！《克里夫·巴克的养鬼吃人》究竟讲了什么？？？",
+      "play": 536634,
+      "author": "五四IAM",
+      "url": "https://www.bilibili.com/video/BV16opg6WEcD"
+    },
+    {
+      "title": "宿主你好，今天我们速通 赤女",
+      "play": 281402,
+      "author": "北寻丷",
+      "url": "https://www.bilibili.com/video/BV1Gepv6jETs"
+    },
+    {
+      "title": "我们来到了地中海，重走《奥德赛》十年回家路！",
+      "play": 812600,
+      "author": "-欣小萌-",
+      "url": "https://www.bilibili.com/video/BV1mopE6xEqv"
+    },
+    {
+      "title": "也是当上外卖大法官了",
+      "play": 2707676,
+      "author": "阿萨Aza",
+      "url": "https://www.bilibili.com/video/BV1Vtpg65EnA"
+    },
+    {
+      "title": "玩家变成魔王，魔王却成了勇者，这款27年前的游戏竟有隐藏结局！",
+      "play": 238008,
+      "author": "逗比的预言家",
+      "url": "https://www.bilibili.com/video/BV1yfpj6jEk5"
+    },
+    {
+      "title": "《明日方舟》× 国家图书馆「恒远津梁」合作宣传PV",
+      "play": 1032024,
+      "author": "明日方舟",
+      "url": "https://www.bilibili.com/video/BV1Gmpu6rE4w"
+    },
+    {
+      "title": "【雀说】雀巢&鲸尾 | 自卑在哪一天消失",
+      "play": 846716,
+      "author": "成都幽默帝国",
+      "url": "https://www.bilibili.com/video/BV1Rgpi6DEhX"
+    },
+    {
+      "title": "《贫道》",
+      "play": 1652928,
+      "author": "三界B面-叁",
+      "url": "https://www.bilibili.com/video/BV1QJpi6yEPp"
+    },
+    {
+      "title": "虽然命还在，但是鱼没了啊！！！【AI全民制作人】",
+      "play": 2958232,
+      "author": "陈要得",
+      "url": "https://www.bilibili.com/video/BV1xTpG6iEbV"
+    },
+    {
+      "title": "《结账是你的谎言》",
+      "play": 1537248,
+      "author": "郑凯伦伦伦",
+      "url": "https://www.bilibili.com/video/BV1yTpg6ZEHs"
+    },
+    {
+      "title": "川普再失诺奖日，中期选举大撒币？",
+      "play": 596726,
+      "author": "麻薯波比呀",
+      "url": "https://www.bilibili.com/video/BV1Dapg66EL5"
+    },
+    {
+      "title": "“和公主，在荒岛求生。”",
+      "play": 1019272,
+      "author": "Mr-Ferret",
+      "url": "https://www.bilibili.com/video/BV16Rpg6REVH"
+    },
+    {
+      "title": "罗伊冰原的小小救世主    [索拉逐星舞台]",
+      "play": 185969,
+      "author": "CelinePizza",
+      "url": "https://www.bilibili.com/video/BV1K9pj6DEKJ"
+    },
+    {
+      "title": "可观测宇宙中最困的一声囔",
+      "play": 855949,
+      "author": "翘翘回头",
+      "url": "https://www.bilibili.com/video/BV1BWHQ6PE3b"
+    },
+    {
+      "title": "那些无法解释的瞬间心理感受。。。又一次把我心里的画面拍了出来，这次你中了几个？",
+      "play": 263447,
+      "author": "李如儒也是李蠕蠕",
+      "url": "https://www.bilibili.com/video/BV179p76zEZR"
+    },
+    {
+      "title": "机器人暴动，神明已死？！电影级演出质量拉满！一口气看完《鸣潮》 玄方地界篇剧情",
+      "play": 214720,
+      "author": "小片片说大片",
+      "url": "https://www.bilibili.com/video/BV1hqpv65E2f"
+    },
+    {
+      "title": "deepseek 翻唱《人是猫》真完整版，大肥鱼觉得人和猫一样可爱,所以人是猫",
+      "play": 81028,
+      "author": "星落落_oi",
+      "url": "https://www.bilibili.com/video/BV1fYpn6SEk9"
+    },
+    {
+      "title": "今天是跟随我七年的摄影师大喜的日子🎉，兄弟们一起见证这份幸福，沾沾喜气。祝两位新人岁岁相伴，共度春夏秋冬～",
+      "play": 345558,
+      "author": "李维刚的日常",
+      "url": "https://www.bilibili.com/video/BV1fppv69EW7"
+    },
+    {
+      "title": "《不该存在的访客》继续用爱发电，耗费10000分钟制作，花费1000块",
+      "play": 533727,
+      "author": "卡拉-肖克辉",
+      "url": "https://www.bilibili.com/video/BV1ZSp46AEF8"
+    },
+    {
+      "title": "这种神人游戏怎么还在出新作啊？",
+      "play": 499325,
+      "author": "徐大虾咯",
+      "url": "https://www.bilibili.com/video/BV1F4pj6uEZV"
+    },
+    {
+      "title": "🥳每天来上一段感觉人生好通透啊⚡️‌朋 友 的 酒🍺DJ⚡️‌",
+      "play": 294217,
+      "author": "真栗",
+      "url": "https://www.bilibili.com/video/BV1sppE6SENL"
+    },
+    {
+      "title": "每个生命都值得被善待",
+      "play": 410666,
+      "author": "李炮炮儿",
+      "url": "https://www.bilibili.com/video/BV1DCpj64Emi"
+    },
+    {
+      "title": "后来的我才明白...",
+      "play": 1459327,
+      "author": "李万基fit",
+      "url": "https://www.bilibili.com/video/BV1PDpv6vEsj"
+    },
+    {
+      "title": "选秀，但是剧组很穷",
+      "play": 699433,
+      "author": "忆雨潇湘_",
+      "url": "https://www.bilibili.com/video/BV1VjHX6ZEeB"
+    },
+    {
+      "title": "有人说一台苹果18的钱能在山东大集买到多少东西和多少人快乐，咱们一起来挑战和数数！",
+      "play": 1063889,
+      "author": "superB太",
+      "url": "https://www.bilibili.com/video/BV1Tfpu6PEKq"
+    },
+    {
+      "title": "如果把我和男朋友这几年的约会地点列出来",
+      "play": 1209122,
+      "author": "锣斯特",
+      "url": "https://www.bilibili.com/video/BV16xpt6BE6t"
+    },
+    {
+      "title": "1段“小女孩在生日聚会上跳舞”视频，暴露出多少令人尴尬的神人",
+      "play": 3562890,
+      "author": "小椰子专栏",
+      "url": "https://www.bilibili.com/video/BV1AXpY6xEgy"
+    },
+    {
+      "title": "改写战局！多库替补造2球+造红牌 哈兰德破门 十人利物浦0比3曼城",
+      "play": 116190,
+      "author": "吉罗很快乐",
+      "url": "https://www.bilibili.com/video/BV17wpp6SEe9"
+    },
+    {
+      "title": "我赶了中缅边境最野的集！第一次体验缅甸洗头，真的会上头吗？",
+      "play": 696010,
+      "author": "兔兔不会秃秃",
+      "url": "https://www.bilibili.com/video/BV1kwp765Ec3"
+    },
+    {
+      "title": "【立志成为恶兽】06 青竹宗与狗妖的智斗【UP动画】【HiShorts! × updream AI短片大赛-剧情单元】",
+      "play": 322421,
+      "author": "立志成为恶兽",
+      "url": "https://www.bilibili.com/video/BV1ucpG66E3u"
+    },
+    {
+      "title": "特朗普为何“大撒币”？中期选举究竟有多重要？【纸牌屋现实版】",
+      "play": 128527,
+      "author": "普朗特-PRUMT",
+      "url": "https://www.bilibili.com/video/BV14LpE6sEx6"
+    },
+    {
+      "title": "哪一行都不好干（84）",
+      "play": 1410837,
+      "author": "-显眼宝-",
+      "url": "https://www.bilibili.com/video/BV1fopY6QEmP"
+    },
+    {
+      "title": "一镜到底骑行在路边发现一条未知小路，沉浸式体验在城市角落探索",
+      "play": 248331,
+      "author": "暗夜骑士XZ",
+      "url": "https://www.bilibili.com/video/BV1KApg6hEa1"
+    },
+    {
+      "title": "翻唱一首陶喆的《千言万语》【bilibili次元干杯】",
+      "play": 266820,
+      "author": "蔚蓝边际",
+      "url": "https://www.bilibili.com/video/BV1MGpE6tESD"
+    },
+    {
+      "title": "陈翔六点半 :当你的人生有了bgm，你还会选错吗",
+      "play": 4443309,
+      "author": "陈翔六点半",
+      "url": "https://www.bilibili.com/video/BV1ihHQ6bE7q"
+    },
+    {
+      "title": "蒋介石为何能打败所有军阀？唯独又打不过红军？【历史调研室108】",
+      "play": 209654,
+      "author": "历史调研室",
+      "url": "https://www.bilibili.com/video/BV1wspE6EEFd"
+    }
+  ]
+}

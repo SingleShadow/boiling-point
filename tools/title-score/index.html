@@ -49,6 +49,7 @@ h3{font-size:14px;font-weight:600;margin:18px 0 10px}
 .sim:first-of-type{border-top:0}
 .simtitle{display:block;margin-bottom:2px}
 .simmeta{color:var(--muted);font-size:12px}
+.simtitle a{color:var(--graphite);text-decoration:none}
 
 .lead{margin-top:20px}
 .leadrow{display:flex;gap:10px;margin-top:10px}
@@ -57,7 +58,6 @@ input[type=email]{flex:1;border:1px solid var(--line);border-radius:10px;padding
 input[type=email]:focus{border-color:var(--orange)}
 .ok{color:var(--blue);font-size:13px;margin-top:10px;display:none}
 footer{color:var(--muted);font-size:12px;text-align:center;margin-top:26px;line-height:1.9}
-footer a{color:var(--blue);text-decoration:none}
 @media(max-width:520px){
   .fname{flex:0 0 76px}.frate{display:none}
   .num{font-size:44px}
@@ -68,7 +68,7 @@ footer a{color:var(--blue);text-decoration:none}
 <div class="wrap">
 
   <div class="brand"><span class="dot"></span><h1>标题体检</h1></div>
-  <p class="sub">用当下真实热门的 <b id="bsize">—</b> 条标题做基准，看你的标题差在哪。每条建议都带占比数据。</p>
+  <p class="sub">用当下真实热门的 <b id="bsize">—</b> 条标题做基准，看你的标题差在哪。每条建议都带占比数据。全部在本地算完，不传你的标题到任何服务器。</p>
 
   <div class="card">
     <textarea id="t" placeholder="粘贴你要发的视频标题，例如：我花了 30 天做这件事，结局谁也没想到"></textarea>
@@ -112,42 +112,47 @@ footer a{color:var(--blue);text-decoration:none}
   </div>
 
   <footer>
-    基准来源：B站公开接口实时热门（真实数据，非构造值）· 每日更新<br>
-    <a href="/web/">沸点创意官网</a> · <a href="/agent/">值守控制台</a>
+    <span id="srcline">基准来源：真实 B站全站热门 Top50（非构造值）</span><br>
+    本工具纯前端运行 · <a href="https://github.com/" id="ghlink" style="color:var(--blue);text-decoration:none">沸点创意</a>
   </footer>
 </div>
 
+<script src="./engine.js"></script>
 <script>
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fmt = (n) => (Number(n) || 0).toLocaleString('zh-CN');
 const COLOR = { A: '#1D9E75', B: '#2F6BFF', C: '#FFB020', D: '#E8362B' };
+const E = window.TitleEngine;
 let last = null;
+let BL = null;   // { baseline, pool, generatedAt }
 
 async function loadBaseline() {
   try {
-    const r = await fetch('/api/score-title/baseline').then((x) => x.json());
-    if (r.ok && r.data) $('bsize').textContent = r.data.size || 0;
-  } catch {}
+    const r = await fetch('./baseline.json', { cache: 'no-cache' }).then((x) => x.json());
+    BL = r;
+    $('bsize').textContent = r.baseline?.size || 0;
+    if (r.generatedAt) {
+      const d = new Date(r.generatedAt);
+      $('srcline').textContent = `基准来源：真实 B站全站热门 Top50（快照 ${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}）`;
+    }
+  } catch (e) {
+    $('bsize').textContent = '加载失败';
+    $('err').style.display = 'block';
+    $('err').textContent = '基准数据加载失败，请刷新重试';
+  }
 }
 
-async function score() {
+function score() {
   const title = $('t').value.trim();
   if (!title) { $('err').style.display = 'block'; $('err').textContent = '先写一个标题'; return; }
+  if (!BL) { $('err').style.display = 'block'; $('err').textContent = '基准数据未就绪，稍等重试'; return; }
   $('err').style.display = 'none';
-  $('go').disabled = true;
-  $('go').textContent = '打分中';
-  try {
-    const r = await fetch('/api/score-title?title=' + encodeURIComponent(title)).then((x) => x.json());
-    if (!r.ok) throw new Error(r.error?.message || '打分失败');
-    render(r.data);
-  } catch (e) {
-    $('err').style.display = 'block';
-    $('err').textContent = e.message;
-  } finally {
-    $('go').disabled = false;
-    $('go').textContent = '打分';
-  }
+
+  // 全部在本地算完，标题不出浏览器
+  const d = E.scoreTitle(title, BL.baseline);
+  d.similar = E.similarTitles(title, BL.pool || [], 3);
+  render(d);
 }
 
 function render(d) {
@@ -182,7 +187,7 @@ function render(d) {
   const sims = d.similar || [];
   $('simwrap').style.display = sims.length ? 'block' : 'none';
   $('sims').innerHTML = sims.map((s) => `<div class="sim">
-    <span class="simtitle">${esc(s.title)}</span>
+    <span class="simtitle">${s.title ? `<a href="${esc(s.url||'#')}" target="_blank" rel="noopener">${esc(s.title)}</a>` : esc(s.title || '')}</span>
     <span class="simmeta">${fmt(s.play)} 播放${s.author ? ' · ' + esc(s.author) : ''}</span>
   </div>`).join('');
 
@@ -203,13 +208,13 @@ async function subscribe() {
     if (!r.ok) throw new Error(r.error?.message || '提交失败');
     $('suberr').style.display = 'none';
     $('ok').style.display = 'block';
-    $('ok').textContent = r.data.created
+    $('ok').textContent = r.data && r.data.created
       ? '已记下，明天的拆解会发到 ' + email
       : '这个邮箱已经订阅过了';
     $('email').value = '';
   } catch (e) {
     $('suberr').style.display = 'block';
-    $('suberr').textContent = e.message;
+    $('suberr').textContent = '暂时提交不了（可能是部署还没接好留资接口），你可以稍后再试或直接联系我们';
   } finally {
     $('sub').disabled = false;
   }

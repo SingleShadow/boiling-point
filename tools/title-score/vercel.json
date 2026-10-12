@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "buildCommand": null,
+  "outputDirectory": ".",
+  "functions": {
+    "api/subscribe.js": { "runtime": "nodejs22.x" }
+  }
+}
