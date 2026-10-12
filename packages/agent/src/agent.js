@@ -17,14 +17,40 @@ import {
   ensureAgentSchema, startAgentRun, finishAgentRun, remember, recall,
   listMemory, listFindings, listAgentRuns, latestAgentRun, getAgentStats, addFinding,
 } from './memory.js';
+import { createLogger } from '../../core/src/audit/logger.js';
+
+/* ---------------- 工作留痕 ---------------- */
+/* 小沸是 packages/agent 运行时服务（ORG.md：它是被开发维护的产品，agentId 用 xiaofei）。
+ * 留痕写入失败绝不影响主流程——logger 内部三级降级，这里也不 await。
+ */
+let auditLogger = null;
+function getAudit() {
+  if (!auditLogger) auditLogger = createLogger({ agentId: 'xiaofei', agentName: '小沸' });
+  return auditLogger;
+}
 
 /** 只感知与规划，不执行 —— 用于展示「Agent 现在在想什么」 */
 export async function planOnly(opts = {}) {
   const db = opts.db || getDb();
   ensureAgentSchema(db);
-  const obs = await observe(db, opts);
-  const plan = planActions(obs, opts);
-  return { observation: obs, plan };
+  const h = getAudit().task({
+    task: '只感知与规划',
+    source: opts.source || 'api:/api/agent/plan',
+    context: { dateKey: opts.dateKey || null },
+  });
+  try {
+    h.step('感知');
+    const obs = await observe(db, opts);
+    h.tool('sense.observe', { live: Boolean(obs?.live?.ok) });
+    h.step('规划');
+    const plan = planActions(obs, opts);
+    h.tool('plan.planActions', { actions: (plan.actions || []).length });
+    h.ok({ actions: (plan.actions || []).length });
+    return { observation: obs, plan };
+  } catch (e) {
+    h.fail(e);
+    throw e;
+  }
 }
 
 /**
@@ -38,27 +64,46 @@ export async function runAgent(opts = {}) {
   const metric = opts.metric || 'play';
   const t0 = Date.now();
 
+  const h = getAudit().task({
+    task: '每日值守',
+    source: opts.source || 'unknown',
+    context: { dateKey, limit, metric },
+  });
+  h.tool('db.ensureAgentSchema');
+
+  try {
   const runId = startAgentRun(db, { dateKey });
+  h.tool('db.startAgentRun', { runId });
 
   /* 1. 感知 */
+  h.step('感知');
   const obs = await observe(db, { dateKey, limit, metric });
+  h.tool('sense.observe', { live: Boolean(obs?.live?.ok) });
 
   /* 2. 规划 */
+  h.step('规划');
   const plan = planActions(obs, { dateKey, limit, metric, force: opts.force, mode: opts.mode });
+  h.tool('plan.planActions', { actions: (plan.actions || []).length, mode: plan.mode });
 
   /* 3. 执行 */
+  h.step('执行');
   const exec = await executePlan(db, plan.actions, { dateKey, limit, metric, mode: plan.mode });
   let report = exec.report;
   let source = exec.source;
   let actions = exec.results;
   let repaired = false;
+  h.tool('act.executePlan', { source: exec.source, results: (exec.results || []).length });
 
   /* 4. 质检 */
+  h.step('质检');
   let qa = evaluateReport({ report, expected: limit, source });
+  h.tool('evaluate.evaluateReport', { score: qa.score, grade: qa.grade });
 
   /* 5. 不合格则修复重跑（至多一轮，避免死循环） */
   if (qa.score < REPAIR_THRESHOLD && report) {
+    h.step('修复重跑', { score: qa.score, threshold: REPAIR_THRESHOLD });
     const repair = planRepair(qa, obs, { dateKey, limit });
+    h.tool('plan.planRepair', { hasRepair: Boolean(repair) });
     if (repair) {
       const re = await executePlan(db, repair.actions, { dateKey, limit, metric });
       const qa2 = evaluateReport({ report: re.report, expected: limit, source: re.source });
@@ -80,9 +125,12 @@ export async function runAgent(opts = {}) {
   }
 
   /* 6. 沉淀记忆 */
+  h.step('沉淀记忆');
   learn(db, { dateKey, obs, qa, source: source || report?.source, report, repaired });
+  h.tool('memory.learn');
 
   /* 7. 出简报 */
+  h.step('出简报');
   const brief = buildBrief({ dateKey, observation: obs, plan, actions, qa, report, source, durationMs: Date.now() - t0, repaired });
 
   const status = brief.status;
@@ -100,7 +148,9 @@ export async function runAgent(opts = {}) {
     brief,
     message: brief.headline,
   });
+  h.tool('db.finishAgentRun', { runId, status });
 
+  h.ok({ status, healthScore: qa.score, grade: qa.grade, source: source || report?.source || '', repaired });
   return {
     dateKey,
     runId,
@@ -117,6 +167,10 @@ export async function runAgent(opts = {}) {
     brief,
     durationMs: Date.now() - t0,
   };
+  } catch (e) {
+    h.fail(e, { dateKey });
+    throw e;
+  }
 }
 
 /* ---------------- 学习与进化 ---------------- */
@@ -232,6 +286,13 @@ export async function startDaemon(opts = {}) {
       }
     } catch (e) {
       console.error(`[agent] 值守失败：${e.message}`);
+      getAudit().record({
+        task: '每日值守(守护模式)',
+        source: 'daemon',
+        status: 'fail',
+        error: e,
+        context: { dateKey: today },
+      });
     } finally {
       running = false;
     }

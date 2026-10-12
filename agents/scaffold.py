@@ -723,6 +723,21 @@ AGENTS_TMPL = """# AGENTS.md — {name} {emoji} 工作规则
 3. 阻塞不隐瞒，按 SLA 上报
 4. 涉及合同、付款、对外承诺的事一律转人
 
+## 七、工作留痕（每日必做）
+
+每完成一个任务必须补一条结构化日志，**没留痕视为没做**——留痕用于事后复盘与责任定位。
+
+```bash
+node packages/core/bin/agentlog.js add \\
+  --agent {slug} --name {name} \\
+  --task "<任务名>" --source "<来源，如 story-12 / 站会 / cron>" \\
+  --status ok --duration <毫秒> [--error "<失败原因>"] [--note "<备注>"]
+```
+
+- 成功记 `--status ok`，失败记 `--status fail` 并**必须带 `--error`**
+- 落到 `logs/agents/{slug}/<YYYY-MM-DD>.jsonl`，一行一条
+- 脱敏、降级、查看方式的完整规范见仓库根 `AGENT_LOGGING.md`
+
 ---
 _{date}_
 """

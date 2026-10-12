@@ -5,6 +5,7 @@ build/
 .umi/
 .umi-production/
 *.log
+logs/
 .env
 .env.local
 data/*.db
