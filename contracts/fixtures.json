@@ -1,0 +1,105 @@
+{
+  "note": "mock 数据：前端在后端实现完成前直接对接 mock-server（npm run contract:mock）。字段名必须与 contracts/api.json 一致，不一致即视为契约被破坏。",
+  "health": {
+    "service": "boiling-point-api",
+    "version": "1.0.0",
+    "time": "2026-10-13T02:00:00.000Z",
+    "today": "2026-10-13",
+    "dataMode": "auto",
+    "metric": "play",
+    "topN": 10,
+    "lastRunAt": "2026-10-13T01:00:00.000Z",
+    "cronHour": 9,
+    "stats": { "videos": 10, "reports": 1, "days": 1, "subscribers": 0 },
+    "hasLiveKey": false
+  },
+  "today": {
+    "_generated": true,
+    "_warnings": [],
+    "date": "2026-10-13",
+    "source": "custom",
+    "generatedAt": "2026-10-13T02:00:00.000Z",
+    "audienceInsight": {
+      "avgBoilingScore": 62.4,
+      "sampleSize": 50,
+      "topTopics": [
+        { "name": "单机游戏", "count": 7 },
+        { "name": "日常", "count": 6 }
+      ],
+      "realHotWords": []
+    },
+    "entries": [
+      {
+        "id": "BV1xx411c7mD",
+        "title": "跟着AI教学能否实现薯条自由？",
+        "author": "示例UP",
+        "play": 592682,
+        "duration": 450,
+        "url": "https://www.bilibili.com/video/BV1xx411c7mD",
+        "tags": {}
+      }
+    ]
+  },
+  "report": {
+    "date": "2026-10-13",
+    "source": "custom",
+    "generatedAt": "2026-10-13T02:00:00.000Z",
+    "audienceInsight": { "avgBoilingScore": 62.4, "sampleSize": 50, "topTopics": [], "realHotWords": [] },
+    "entries": []
+  },
+  "reports": [
+    { "date": "2026-10-13", "createdAt": "2026-10-13T02:00:00.000Z", "avgBoilingScore": 62.4, "topTopic": "单机游戏", "sampleSize": 50 }
+  ],
+  "videos": [
+    {
+      "id": "BV1xx411c7mD",
+      "title": "跟着AI教学能否实现薯条自由？",
+      "author": "示例UP",
+      "play": 592682,
+      "duration": 450,
+      "url": "https://www.bilibili.com/video/BV1xx411c7mD",
+      "tags": {}
+    }
+  ],
+  "tags": { "dimension": ["topic", "copy", "rhythm", "craft"], "count": 86 },
+  "trends": [
+    { "tagId": "topic_game", "name": "单机游戏", "dimension": "topic", "series": [{ "date": "2026-10-13", "count": 7 }] }
+  ],
+  "runs": [],
+  "stats": { "videos": 10, "reports": 1, "days": 1, "subscribers": 0 },
+  "run": { "date": "2026-10-13", "source": "custom", "count": 50, "warnings": [], "avgBoilingScore": 62.4 },
+  "scoreTitle": {
+    "score": 46,
+    "grade": "C",
+    "verdict": "能用，但缺少让人非点不可的理由",
+    "coverage": 0.33,
+    "length": { "value": 16, "ideal": [10, 22], "verdict": "ok" },
+    "features": [
+      { "id": "question", "name": "疑问钩子", "hit": true, "rate": 0.26, "hot": true, "tip": null }
+    ],
+    "suggestions": ["热门中 20% 的标题用了「情绪词」，你的没有 —— 点明一种具体情绪"],
+    "similar": [{ "title": "3个方法让你早睡", "play": 123456, "author": "示例UP", "url": "#" }],
+    "baseline": { "size": 50, "length": { "p25": 10, "p50": 16, "p75": 22 } }
+  },
+  "scoreTitleBaseline": {
+    "size": 50,
+    "rate": { "question": 0.26, "emotion": 0.2, "bracket": 0.18, "list": 0.16, "firstperson": 0.14, "number": 0.12 },
+    "length": { "min": 0, "max": 38, "p25": 10, "p50": 16, "p75": 22 },
+    "fetchedAt": "2026-10-13T02:00:00.000Z",
+    "source": "history+live"
+  },
+  "subscribe": { "ok": true, "created": true, "email": "demo@example.com", "total": 1 },
+  "subscribers": { "total": 0, "items": [] },
+  "hotwords": [
+    { "word": "示例热搜", "hotValue": 1234567, "label": 3 }
+  ],
+  "agentStatus": { "dateKey": "2026-10-13", "health": { "score": 94, "grade": "A" } },
+  "agentPlan": { "steps": [] },
+  "agentRun": { "ok": true },
+  "agentBrief": { "dateKey": "2026-10-13", "text": "示例简报" },
+  "agentMemory": [],
+  "agentFindings": [],
+  "agentRuns": [],
+  "agentStats": { "runs": 1, "findings": 0, "healthyRate": 1 },
+  "backfill": { "ok": true, "days": 7 }
+}

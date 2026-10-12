@@ -1,0 +1,407 @@
+{
+  "$schema": "boiling-contract/1",
+  "version": "2026-10-13.1",
+  "baseUrl": "http://localhost:8787",
+  "owner": "阿服（后端 Agent）",
+  "note": "契约先行：本文件是前后端唯一真源。status=frozen 的端点前端才可开工；新增端点一律先 draft，由阿服冻结后才能进前端。初版由现有实现反推，字段精度由阿服逐条确认。",
+  "errorCodes": {
+    "400": "参数缺失或非法（如 email 格式错误、limit 非数字）",
+    "404": "路径不存在",
+    "500": "服务端异常（数据源失败 / DB 错误）",
+    "502": "上游数据源不可用（降级时返回仿真数据并在 warnings 标注）"
+  },
+  "models": {
+    "Health": {
+      "service": "string",
+      "version": "string",
+      "time": "string",
+      "today": "string",
+      "dataMode": "string",
+      "metric": "string",
+      "topN": "number",
+      "lastRunAt": "string?",
+      "cronHour": "number",
+      "stats": "Stats",
+      "hasLiveKey": "boolean"
+    },
+    "Stats": {
+      "videos": "number?",
+      "reports": "number?",
+      "days": "number?",
+      "subscribers": "number?"
+    },
+    "AudienceInsight": {
+      "avgBoilingScore": "number",
+      "sampleSize": "number",
+      "topTopics": "TopicCount[]",
+      "realHotWords": "string[]?"
+    },
+    "TopicCount": {
+      "name": "string",
+      "count": "number"
+    },
+    "VideoEntry": {
+      "id": "string",
+      "title": "string",
+      "author": "string?",
+      "play": "number",
+      "duration": "number?",
+      "url": "string?",
+      "tags": "object?"
+    },
+    "Report": {
+      "date": "string",
+      "source": "string",
+      "generatedAt": "string?",
+      "audienceInsight": "AudienceInsight?",
+      "entries": "VideoEntry[]?"
+    },
+    "TodayResponse": {
+      "_generated": "boolean",
+      "_warnings": "string[]"
+    },
+    "ReportListItem": {
+      "date": "string",
+      "createdAt": "string",
+      "avgBoilingScore": "number",
+      "topTopic": "string",
+      "sampleSize": "number"
+    },
+    "TagSeries": {
+      "tagId": "string",
+      "name": "string",
+      "dimension": "string",
+      "series": "object[]"
+    },
+    "FeatureHit": {
+      "id": "string",
+      "name": "string",
+      "hit": "boolean",
+      "rate": "number?",
+      "hot": "boolean?",
+      "tip": "string?"
+    },
+    "SimilarTitle": {
+      "title": "string",
+      "play": "number?",
+      "author": "string?",
+      "url": "string?"
+    },
+    "ScoreResult": {
+      "score": "number",
+      "grade": "string",
+      "verdict": "string",
+      "coverage": "number?",
+      "length": "object",
+      "features": "FeatureHit[]",
+      "suggestions": "string[]",
+      "similar": "SimilarTitle[]?",
+      "baseline": "object?"
+    },
+    "Baseline": {
+      "size": "number",
+      "rate": "object",
+      "length": "object",
+      "fetchedAt": "string",
+      "source": "string"
+    },
+    "SubscribeResult": {
+      "ok": "boolean",
+      "created": "boolean?",
+      "email": "string?",
+      "total": "number"
+    },
+    "SubscribersResult": {
+      "total": "number",
+      "items": "object[]"
+    },
+    "HotWord": {
+      "word": "string",
+      "hotValue": "number?",
+      "label": "number?"
+    },
+    "RunResult": {
+      "date": "string",
+      "source": "string",
+      "count": "number",
+      "warnings": "string[]",
+      "avgBoilingScore": "number?"
+    },
+    "AgentStats": {
+      "runs": "number?",
+      "findings": "number?",
+      "healthyRate": "number?"
+    }
+  },
+  "endpoints": [
+    {
+      "id": "health",
+      "status": "frozen",
+      "method": "GET",
+      "path": "/api/health",
+      "summary": "服务健康检查与运行参数快照",
+      "params": {},
+      "response": "Health",
+      "errors": ["500"]
+    },
+    {
+      "id": "today",
+      "status": "frozen",
+      "method": "GET",
+      "path": "/api/today",
+      "summary": "取指定日期的爆款拆解报告（不存在则现生成）",
+      "params": {
+        "date": { "in": "query", "type": "string", "required": false, "desc": "YYYY-MM-DD，默认今天" },
+        "force": { "in": "query", "type": "string", "required": false, "desc": "传 1 强制重算" }
+      },
+      "response": "TodayResponse",
+      "errors": ["500", "502"]
+    },
+    {
+      "id": "report",
+      "status": "frozen",
+      "method": "GET",
+      "path": "/api/report",
+      "summary": "取已生成的报告，不存在返回 null",
+      "params": {
+        "date": { "in": "query", "type": "string", "required": false, "desc": "YYYY-MM-DD" }
+      },
+      "response": "Report?",
+      "errors": ["500"]
+    },
+    {
+      "id": "reports",
+      "status": "frozen",
+      "method": "GET",
+      "path": "/api/reports",
+      "summary": "报告列表（摘要，不含正文）",
+      "params": {
+        "limit": { "in": "query", "type": "number", "required": false, "desc": "默认 30" }
+      },
+      "response": "ReportListItem[]",
+      "errors": ["500"]
+    },
+    {
+      "id": "videos",
+      "status": "frozen",
+      "method": "GET",
+      "path": "/api/videos",
+      "summary": "某天的上榜视频明细",
+      "params": {
+        "date": { "in": "query", "type": "string", "required": false },
+        "limit": { "in": "query", "type": "number", "required": false, "desc": "默认 50" }
+      },
+      "response": "VideoEntry[]",
+      "errors": ["500"]
+    },
+    {
+      "id": "tags",
+      "status": "frozen",
+      "method": "GET",
+      "path": "/api/tags",
+      "summary": "导出标签体系（taxonomy）",
+      "params": {},
+      "response": "object",
+      "errors": ["500"]
+    },
+    {
+      "id": "trends",
+      "status": "frozen",
+      "method": "GET",
+      "path": "/api/trends",
+      "summary": "标签趋势序列",
+      "params": {
+        "days": { "in": "query", "type": "number", "required": false, "desc": "默认 7" },
+        "date": { "in": "query", "type": "string", "required": false }
+      },
+      "response": "TagSeries[]",
+      "errors": ["500"]
+    },
+    {
+      "id": "runs",
+      "status": "frozen",
+      "method": "GET",
+      "path": "/api/runs",
+      "summary": "历史执行记录",
+      "params": { "limit": { "in": "query", "type": "number", "required": false } },
+      "response": "object[]",
+      "errors": ["500"]
+    },
+    {
+      "id": "stats",
+      "status": "frozen",
+      "method": "GET",
+      "path": "/api/stats",
+      "summary": "库内统计概览",
+      "params": {},
+      "response": "Stats",
+      "errors": ["500"]
+    },
+    {
+      "id": "run",
+      "status": "frozen",
+      "method": "POST",
+      "path": "/api/run",
+      "summary": "手动触发一次每日抓取与报告生成",
+      "params": {
+        "date": { "in": "body", "type": "string", "required": false },
+        "limit": { "in": "body", "type": "number", "required": false },
+        "metric": { "in": "body", "type": "string", "required": false },
+        "mode": { "in": "body", "type": "string", "required": false }
+      },
+      "response": "RunResult",
+      "errors": ["400", "500", "502"]
+    },
+    {
+      "id": "scoreTitle",
+      "status": "frozen",
+      "method": "GET",
+      "path": "/api/score-title",
+      "summary": "标题打分（获客工具核心接口）",
+      "params": {
+        "title": { "in": "query", "type": "string", "required": true, "desc": "待打分标题，服务端截断 200 字" }
+      },
+      "response": "ScoreResult",
+      "errors": ["400", "500"]
+    },
+    {
+      "id": "scoreTitleBaseline",
+      "status": "frozen",
+      "method": "GET",
+      "path": "/api/score-title/baseline",
+      "summary": "当前热门标题基准分布（供前端展示口径）",
+      "params": {},
+      "response": "Baseline",
+      "errors": ["500"]
+    },
+    {
+      "id": "subscribe",
+      "status": "frozen",
+      "method": "POST",
+      "path": "/api/subscribe",
+      "summary": "邮箱留资（验证期不发确认邮件）",
+      "params": {
+        "email": { "in": "body", "type": "string", "required": true },
+        "source": { "in": "body", "type": "string", "required": false, "desc": "默认 title-tool" },
+        "note": { "in": "body", "type": "string", "required": false }
+      },
+      "response": "SubscribeResult",
+      "errors": ["400", "500"]
+    },
+    {
+      "id": "subscribers",
+      "status": "frozen",
+      "method": "GET",
+      "path": "/api/subscribers",
+      "summary": "留资列表（内部）",
+      "params": {},
+      "response": "SubscribersResult",
+      "errors": ["500"]
+    },
+    {
+      "id": "hotwords",
+      "status": "frozen",
+      "method": "GET",
+      "path": "/api/hotwords",
+      "summary": "抖音实时热搜词",
+      "params": { "limit": { "in": "query", "type": "number", "required": false, "desc": "默认 20" } },
+      "response": "HotWord[]",
+      "errors": ["502"]
+    },
+    {
+      "id": "agentStatus",
+      "status": "frozen",
+      "method": "GET",
+      "path": "/api/agent/status",
+      "summary": "Agent 值守状态快照（KPI + 记忆 + 问题）",
+      "params": { "date": { "in": "query", "type": "string", "required": false } },
+      "response": "object",
+      "errors": ["500"]
+    },
+    {
+      "id": "agentPlan",
+      "status": "frozen",
+      "method": "GET",
+      "path": "/api/agent/plan",
+      "summary": "只感知与规划，不执行（展示思考过程）",
+      "params": {
+        "date": { "in": "query", "type": "string", "required": false },
+        "limit": { "in": "query", "type": "number", "required": false }
+      },
+      "response": "object",
+      "errors": ["500"]
+    },
+    {
+      "id": "agentRun",
+      "status": "frozen",
+      "method": "POST",
+      "path": "/api/agent/run",
+      "summary": "触发一次完整值守闭环",
+      "params": {
+        "dateKey": { "in": "body", "type": "string", "required": false }
+      },
+      "response": "object",
+      "errors": ["500"]
+    },
+    {
+      "id": "agentBrief",
+      "status": "frozen",
+      "method": "GET",
+      "path": "/api/agent/brief",
+      "summary": "当日简报",
+      "params": { "date": { "in": "query", "type": "string", "required": false } },
+      "response": "object",
+      "errors": ["500"]
+    },
+    {
+      "id": "agentMemory",
+      "status": "frozen",
+      "method": "GET",
+      "path": "/api/agent/memory",
+      "summary": "Agent 长期记忆条目",
+      "params": { "category": { "in": "query", "type": "string", "required": false } },
+      "response": "object[]",
+      "errors": ["500"]
+    },
+    {
+      "id": "agentFindings",
+      "status": "frozen",
+      "method": "GET",
+      "path": "/api/agent/findings",
+      "summary": "Agent 发现的问题清单",
+      "params": {},
+      "response": "object[]",
+      "errors": ["500"]
+    },
+    {
+      "id": "agentRuns",
+      "status": "frozen",
+      "method": "GET",
+      "path": "/api/agent/runs",
+      "summary": "Agent 执行历史",
+      "params": { "limit": { "in": "query", "type": "number", "required": false, "desc": "默认 10" } },
+      "response": "object[]",
+      "errors": ["500"]
+    },
+    {
+      "id": "agentStats",
+      "status": "frozen",
+      "method": "GET",
+      "path": "/api/agent/stats",
+      "summary": "Agent 运行统计",
+      "params": {},
+      "response": "AgentStats",
+      "errors": ["500"]
+    },
+    {
+      "id": "backfill",
+      "status": "frozen",
+      "method": "POST",
+      "path": "/api/backfill",
+      "summary": "回溯补录历史数据（注意：B站无历史接口，慎用）",
+      "params": { "days": { "in": "body", "type": "number", "required": false, "desc": "默认 7" } },
+      "response": "object",
+      "errors": ["400", "500"]
+    }
+  ]
+}

@@ -73,7 +73,7 @@
 | 需求 → 设计 | 故事 + 用户场景 | 阿设 | 阿设确认场景完整 |
 | 设计 → 前端 | 设计规格（**数值化**：尺寸/色值/间距/状态） | 志帅 | 人确认可实施 |
 | 需求 → 后端 | 契约要求（字段/行为） | 阿服 | 阿服出 API 契约 |
-| 后端 → 前端 | API 契约（路径/字段/错误码） | 志帅 | 人确认字段齐全 |
+| 后端 → 前端 | **契约 + 类型 + mock + 变更说明**（机制见 `COLLAB.md`） | 志帅 | 四项齐全才可开工，缺一退回 |
 | 前端/后端 → QA | 自测通过的实现 + 自测结论 | 阿测 | 阿测按验收标准验 |
 | QA → 发布 | 门禁结论（通过/不通过） | 阿维 | 阿维见结论才发 |
 | 任意 → 文档 | 变更点 | 阿档 | 阿档同步后确认 |
@@ -247,6 +247,11 @@
 | 场景 | 命令 |
 |---|---|
 | 数据源自检 | `npm run datasource:check` |
+| 契约自检（frozen 必须有 mock） | `npm run contract:check` |
+| 契约 → 前端类型 | `npm run contract:types` |
+| 起 mock 服务（前端独立开发用，:8788） | `npm run contract:mock` |
+| 契约变更 diff + 写 CHANGELOG | `npm run contract:diff` |
+| 检查 / 确认前端已同步契约 | `npm run contract:sync` / `npm run contract:ack` |
 | 全量测试 | `npm test` |
 | 启动服务 | `node server/src/index.js`（端口 8787） |
 | Agent 值守一次 | `npm run agent:run` |
