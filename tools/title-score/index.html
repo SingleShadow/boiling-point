@@ -113,7 +113,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin-top:26px;line-
 
   <footer>
     <span id="srcline">基准来源：真实 B站全站热门 Top50（非构造值）</span><br>
-    本工具纯前端运行 · <a href="https://github.com/" id="ghlink" style="color:var(--blue);text-decoration:none">沸点创意</a>
+    本工具纯前端运行 · <a href="https://github.com/SingleShadow/boiling-point" id="ghlink" style="color:var(--blue);text-decoration:none">沸点创意</a>
   </footer>
 </div>
 
@@ -123,6 +123,13 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fmt = (n) => (Number(n) || 0).toLocaleString('zh-CN');
 const COLOR = { A: '#1D9E75', B: '#2F6BFF', C: '#FFB020', D: '#E8362B' };
+// ===== 邮箱留资配置（部署到静态托管时必填，详见 DEPLOY.md）=====
+// 去 https://formspree.io 免费注册 → 新建表单 → 复制表单 ID（URL 里 /f/ 后面那段），粘贴到下面
+const FORMSPREE_FORM_ID = 'YOUR_FORMSPREE_FORM_ID';
+const SUBSCRIBE_ENDPOINT = (FORMSPREE_FORM_ID && FORMSPREE_FORM_ID !== 'YOUR_FORMSPREE_FORM_ID')
+  ? `https://formspree.io/f/${FORMSPREE_FORM_ID}`
+  : null;
+
 const E = window.TitleEngine;
 let last = null;
 let BL = null;   // { baseline, pool, generatedAt }
@@ -198,23 +205,26 @@ function render(d) {
 async function subscribe() {
   const email = $('email').value.trim();
   if (!email) return;
+  if (!SUBSCRIBE_ENDPOINT) {
+    $('suberr').style.display = 'block';
+    $('suberr').textContent = '留资接口还没配置：请在 index.html 顶部填入 Formspree 表单 ID（详见 DEPLOY.md）。';
+    return;
+  }
   $('sub').disabled = true;
   try {
-    const r = await fetch('/api/subscribe', {
+    const r = await fetch(SUBSCRIBE_ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify({ email, source: 'title-tool', note: last ? `标题体检 ${last.score} 分` : '' }),
-    }).then((x) => x.json());
-    if (!r.ok) throw new Error(r.error?.message || '提交失败');
+    });
+    if (!r.ok) throw new Error('提交失败');
     $('suberr').style.display = 'none';
     $('ok').style.display = 'block';
-    $('ok').textContent = r.data && r.data.created
-      ? '已记下，明天的拆解会发到 ' + email
-      : '这个邮箱已经订阅过了';
+    $('ok').textContent = '已记下，明天的拆解会发到 ' + email;
     $('email').value = '';
   } catch (e) {
     $('suberr').style.display = 'block';
-    $('suberr').textContent = '暂时提交不了（可能是部署还没接好留资接口），你可以稍后再试或直接联系我们';
+    $('suberr').textContent = '暂时提交不了，你可以稍后再试或直接联系我们';
   } finally {
     $('sub').disabled = false;
   }
